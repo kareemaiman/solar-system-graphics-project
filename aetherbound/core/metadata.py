@@ -1,12 +1,13 @@
 class EntityMetadata:
     def __init__(self, name, entity_type, mass, volume=1.0, density=1.0, 
-                 abundant_element="Unknown", durability=100.0):
+                 abundant_element="Unknown", durability=100.0, luminosity=0):
         self.name = name
         self.entity_type = entity_type # planet, star, asteroid, ship, moon
         self.mass = mass
         self.volume = volume
         self.density = density
         self.abundant_element = abundant_element
+        self.luminosity = luminosity # 0 = no light, >0 = brightness
         
         # Physical dynamic vectors mapping
         self.acceleration = [0.0, 0.0, 0.0]

@@ -12,6 +12,16 @@ class DataManager:
             data = json.load(f)
             
         return data
+
+    @staticmethod
+    def load_config(filepath="data/game_config.json"):
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Config file not found: {filepath}")
+        
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            
+        return data
         
     @staticmethod
     def generate_asteroids(config):

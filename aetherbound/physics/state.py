@@ -3,7 +3,7 @@ import numpy as np
 class PhysicsState:
     """
     Data-Oriented Master State Matrix for all physical bodies.
-    Manages an N x 10 NumPy array of dtype float32 (f4).
+    Manages an N x 10 NumPy array of dtype float64 (f8).
     
     Columns:
         0: x
@@ -28,13 +28,16 @@ class PhysicsState:
     def __init__(self, max_bodies=10000):
         # A 2D array of (max_bodies, 10) initialized to zeros with 'f4' constraints
         self.max_bodies = max_bodies
-        self.matrix = np.zeros((self.max_bodies, 10), dtype=np.float32)
+        self.matrix = np.zeros((self.max_bodies, 10), dtype=np.float64)
         
         # Radii for collision checks
-        self.radii = np.zeros(self.max_bodies, dtype=np.float32)
+        self.radii = np.zeros(self.max_bodies, dtype=np.float64)
         
         # Anchor specific indices
         self.fixed_indices = []
+        
+        # Immune indices (unaffected by gravity but can move)
+        self.immune_indices = []
         
         # Track how many bodies have been spawned
         self.spawn_count = 0
@@ -89,4 +92,4 @@ class PhysicsState:
         """
         from .engine import update_physics
         mask = self.get_active_mask()
-        update_physics(self.matrix, mask, dt, G, fixed_indices=self.fixed_indices)
+        update_physics(self.matrix, mask, dt, G, fixed_indices=self.fixed_indices, immune_indices=self.immune_indices)

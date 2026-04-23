@@ -28,15 +28,22 @@ class GLBLoader:
                 uvs = np.array(uvs, dtype=np.float32)
                 
             texture_id = None
-            if hasattr(geom.visual, 'material') and hasattr(geom.visual.material, 'image') and geom.visual.material.image:
-                img = geom.visual.material.image.convert("RGBA").transpose(Image.FLIP_TOP_BOTTOM)
-                img_data = np.array(list(img.getdata()), np.uint8)
-                texture_id = gl.glGenTextures(1)
-                gl.glBindTexture(gl.GL_TEXTURE_2D, texture_id)
-                gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
-                gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-                gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, img.width, img.height, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, img_data)
-                gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+            if hasattr(geom.visual, 'material'):
+                img = None
+                if hasattr(geom.visual.material, 'baseColorTexture') and geom.visual.material.baseColorTexture is not None:
+                    img = geom.visual.material.baseColorTexture
+                elif hasattr(geom.visual.material, 'image') and geom.visual.material.image is not None:
+                    img = geom.visual.material.image
+                    
+                if img is not None:
+                    img = img.convert("RGBA").transpose(Image.FLIP_TOP_BOTTOM)
+                    img_data = np.array(list(img.getdata()), np.uint8)
+                    texture_id = gl.glGenTextures(1)
+                    gl.glBindTexture(gl.GL_TEXTURE_2D, texture_id)
+                    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
+                    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
+                    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, img.width, img.height, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, img_data)
+                    gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
             mesh_obj = Mesh(vertices, normals, uvs, indices, texture_id)
             meshes.append(mesh_obj)

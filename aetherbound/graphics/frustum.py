@@ -8,8 +8,8 @@ class Frustum:
     def update(self, projection_matrix, view_matrix):
         vp = projection_matrix * view_matrix
         
-        # VP matrix is 4x4. Converting to numpy and transposing gives rows
-        mat = np.array(vp.to_list())
+        # VP matrix is column-major in PyGLM. Transposing gives us the rows.
+        mat = np.array(vp.to_list()).T
         
         # Calculate planes
         self.planes[0] = mat[3] + mat[0] # Left

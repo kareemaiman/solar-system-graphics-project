@@ -42,3 +42,8 @@ class Mesh:
         
         gl.glBindVertexArray(0)
         return vao, len(self.indices.flatten())
+        
+    def draw(self):
+        gl.glBindVertexArray(self.vao)
+        gl.glDrawElements(gl.GL_TRIANGLES, self.index_count, gl.GL_UNSIGNED_INT, None)
+        gl.glBindVertexArray(0)

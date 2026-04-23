@@ -1,0 +1,51 @@
+{
+  "engine": {
+    "fixed_dt": 0.01666,
+    "simulation_speed_default": 0.1,
+    "simulation_speed_max": 20.0,
+    "gravity_constant": 1.0,
+    "mouse_sensitivity_default": 0.005
+  },
+  "spaceship": {
+    "thrust_power": 200.0,
+    "mass": 0.001,
+    "radius": 1.0,
+    "durability": 100.0,
+    "model_scale": 0.2,
+    "model_path": "assets/models/the_orville.glb",
+    "camera_distance": 5.0
+  },
+  "weapons": {
+    "missile_speed": 200.0,
+    "missile_lifetime": 8.0,
+    "missile_mass": 0.01,
+    "missile_radius": 0.2,
+    "missile_damage": 25.0,
+    "missile_scale": 0.25,
+    "missile_model_path": "assets/models/missile.glb"
+  },
+  "scanner": {
+    "range": 50.0,
+    "duration": 4.0
+  },
+  "effects": {
+    "explosion_max_radius": 50.0,
+    "explosion_expansion_speed": 1.5,
+    "scanner_wave_width": 5.0,
+    "explosion_color_core": [
+      1.0,
+      1.0,
+      0.6
+    ],
+    "explosion_color_edge": [
+      0.5,
+      0.05,
+      0.0
+    ]
+  },
+  "craters": {
+    "radius_mult": 0.5,
+    "perturbation": 0.5,
+    "darken_factor": 0.3
+  }
+}

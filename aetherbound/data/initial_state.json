@@ -1,42 +1,280 @@
 {
+  "constants": {
+    "G": 1.0
+  },
   "celestial_bodies": [
     {
       "name": "Sun",
       "type": "star",
-      "mass": 20000.0,
-      "position": [0.0, 0.0, 0.0],
-      "velocity": [0.0, 0.0, 0.0]
+      "mass": 1000000.0,
+      "radius": 20.0,
+      "durability": 10000.0,
+      "luminosity": 6.0,
+      "texture": "assets/textures/2k_sun.jpg",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Mercury",
+      "type": "planet",
+      "mass": 0.16,
+      "radius": 1.0,
+      "durability": 500.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_mercury.jpg",
+      "position": [
+        38.7,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -160.7
+      ]
+    },
+    {
+      "name": "Venus",
+      "type": "planet",
+      "mass": 2.45,
+      "radius": 2.5,
+      "durability": 500.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_venus_surface.jpg",
+      "position": [
+        72.3,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -117.6
+      ]
     },
     {
       "name": "Earth",
       "type": "planet",
-      "mass": 5.0,
-      "position": [60.0, 0.0, 0.0],
-      "velocity": [0.0, 0.0, -18.257418583505537]
+      "mass": 3.0,
+      "radius": 3.0,
+      "durability": 500.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_earth_daymap.jpg",
+      "position": [
+        100.0,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -100.0
+      ]
+    },
+    {
+      "name": "ISS",
+      "type": "satellite",
+      "mass": 0.00001,
+      "radius": 0.5,
+      "durability": 50.0,
+      "luminosity": 0.0,
+      "texture": "assets/models/ISS.glb",
+      "position": [
+        100.0,
+        6.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -99.5
+      ],
+      "model_scale": 0.2
+    },
+    {
+      "name": "Mars",
+      "type": "planet",
+      "mass": 0.32,
+      "radius": 1.5,
+      "durability": 500.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_mars.jpg",
+      "position": [
+        152.4,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -81.0
+      ]
     },
     {
       "name": "Jupiter",
       "type": "planet",
-      "mass": 30.0,
-      "position": [150.0, 0.0, 0.0],
-      "velocity": [0.0, 0.0, -11.547005383792515]
+      "mass": 954.0,
+      "radius": 10.0,
+      "durability": 700.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_jupiter.jpg",
+      "position": [
+        520.3,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -43.8
+      ]
+    },
+    {
+      "name": "Saturn",
+      "type": "planet",
+      "mass": 285.0,
+      "radius": 8.0,
+      "durability": 700.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_saturn.jpg",
+      "position": [
+        953.7,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -32.3
+      ]
+    },
+    {
+      "name": "Uranus",
+      "type": "planet",
+      "mass": 43.0,
+      "radius": 5.0,
+      "durability": 700.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_uranus.jpg",
+      "position": [
+        1919.1,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -22.8
+      ]
+    },
+    {
+      "name": "Neptune",
+      "type": "planet",
+      "mass": 51.0,
+      "radius": 5.0,
+      "durability": 700.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_neptune.jpg",
+      "position": [
+        3006.9,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -18.2
+      ]
+    },
+    {
+      "name": "Moon",
+      "type": "moon",
+      "mass": 0.037,
+      "radius": 0.8,
+      "durability": 100.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_moon.jpg",
+      "position": [
+        100.0,
+        0.0,
+        10.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -100.0
+      ]
+    },
+    {
+      "name": "Phobos",
+      "type": "moon",
+      "mass": 0.0001,
+      "radius": 0.2,
+      "durability": 100.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_mars.jpg",
+      "position": [
+        153.0,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -85.0
+      ]
+    },
+    {
+      "name": "Ganymede",
+      "type": "moon",
+      "mass": 0.07,
+      "radius": 1.2,
+      "durability": 100.0,
+      "luminosity": 0.0,
+      "texture": "assets/textures/2k_moon.jpg",
+      "position": [
+        525.0,
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        -55.0
+      ]
     }
   ],
   "spaceship": {
     "name": "The Orville",
     "type": "ship",
-    "mass": 1.0,
-    "position": [100.0, 0.0, 100.0],
-    "velocity": [-15.0, 0.0, 15.0]
+    "mass": 0.001,
+    "position": [
+      125.0,
+      2.0,
+      0.0
+    ],
+    "velocity": [
+      0.0,
+      0.0,
+      0.0
+    ]
   },
   "asteroid_belt": {
-    "count": 500,
-    "radius_min": 200.0,
-    "radius_max": 300.0,
-    "y_variance": 6.0,
-    "vy_variance": 0.6,
-    "mass_min": 0.5,
-    "mass_max": 4.0,
+    "count": 50,
+    "radius_min": 220.0,
+    "radius_max": 320.0,
+    "y_variance": 5.0,
+    "vy_variance": 2.0,
+    "mass_min": 0.0001,
+    "mass_max": 0.01,
     "seed": 42
   }
 }
