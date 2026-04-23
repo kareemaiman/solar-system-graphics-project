@@ -49,14 +49,9 @@ class ThirdPersonCamera:
 
     def update(self, new_target_pos, dt):
         """
-        Smoothly interpolates the camera's target position towards the actual entity's position
-        using a frame-rate independent exponential decay function.
+        Locks the camera's target position instantly to the actual entity's position
         """
-        # Linear interpolation using exponential decay for framerate independence
-        lerp_factor = 1.0 - math.exp(-self.follow_speed * dt)
-        
-        self.target_pos = glm.mix(self.target_pos, glm.vec3(*new_target_pos), lerp_factor)
-        
+        self.target_pos = glm.vec3(*new_target_pos)
         self._update_actual_position()
 
     def get_view_matrix(self):

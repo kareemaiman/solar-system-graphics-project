@@ -30,12 +30,16 @@ class PhysicsState:
         self.max_bodies = max_bodies
         self.matrix = np.zeros((self.max_bodies, 10), dtype=np.float32)
         
+        # Radii for collision checks
+        self.radii = np.zeros(self.max_bodies, dtype=np.float32)
+        
+        # Anchor specific indices
+        self.fixed_indices = []
+        
         # Track how many bodies have been spawned
-        # (Though Data-Oriented approach mainly filters by 'ACTIVE' flag, 
-        # this helps quickly finding the next open slot if not re-using slots immediately).
-        self.spawn_count = 0 
+        self.spawn_count = 0
 
-    def add_body(self, position, velocity, mass, yaw=0.0, pitch=0.0):
+    def add_body(self, position, velocity, mass, radius=1.0, yaw=0.0, pitch=0.0):
         """
         Spawns a new celestial body and returns its index.
         Finds the first inactive row and overwrites it.
@@ -55,6 +59,7 @@ class PhysicsState:
         self.matrix[idx, self.YAW:self.PITCH+1] = [yaw, pitch]
         self.matrix[idx, self.ACTIVE] = 1.0
         
+        self.radii[idx] = radius
         return idx
         
     def delete_body(self, idx):
@@ -84,4 +89,4 @@ class PhysicsState:
         """
         from .engine import update_physics
         mask = self.get_active_mask()
-        update_physics(self.matrix, mask, dt, G)
+        update_physics(self.matrix, mask, dt, G, fixed_indices=self.fixed_indices)

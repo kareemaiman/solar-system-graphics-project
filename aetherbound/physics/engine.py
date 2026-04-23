@@ -1,6 +1,6 @@
 import numpy as np
 
-def update_physics(matrix, active_mask, dt, G=1.0):
+def update_physics(matrix, active_mask, dt, G=1.0, fixed_indices=None):
     """
     Vectorized N-Body Gravity calculation.
     Modifies the velocity and position columns in the Physics State Matrix in-place.
@@ -49,8 +49,51 @@ def update_physics(matrix, active_mask, dt, G=1.0):
     # Sum over all j to get net acceleration vector for each i (Shape: N, 3)
     total_accel = np.sum(accel_vecs, axis=1)
     
+    # Store properties for fixed indices before modification
+    if fixed_indices is not None and len(fixed_indices) > 0:
+        fixed_pos = matrix[fixed_indices, 0:3].copy()
+        fixed_vel = matrix[fixed_indices, 3:6].copy()
+        
     # Update velocities: V = V + A * dt
     matrix[active_mask, 3:6] += total_accel * dt
     
     # Update positions: P = P + V * dt
     matrix[active_mask, 0:3] += matrix[active_mask, 3:6] * dt
+
+    # Revert fixed bodies
+    if fixed_indices is not None and len(fixed_indices) > 0:
+        matrix[fixed_indices, 0:3] = fixed_pos
+        matrix[fixed_indices, 3:6] = fixed_vel
+
+def detect_collisions(matrix, active_mask, radii):
+    """
+    Detects collisions between all active spheres using vectorized distance logic.
+    Returns: list of tuples (id_a, id_b) representing the actual matrix indices of colliding bodies.
+    """
+    active_indices = np.where(active_mask)[0]
+    
+    # If less than 2 bodies, no collisions possible
+    if len(active_indices) < 2:
+        return []
+        
+    positions = matrix[active_mask, 0:3]
+    active_radii = radii[active_mask]
+    
+    diff = positions[np.newaxis, :, :] - positions[:, np.newaxis, :]
+    r = np.linalg.norm(diff, axis=2)
+    
+    thresholds = active_radii[np.newaxis, :] + active_radii[:, np.newaxis]
+    
+    # Avoid self collisions
+    np.fill_diagonal(r, np.inf)
+    
+    # Find colliding pairs where distance < (R1 + R2)
+    collisions = np.argwhere(r < thresholds)
+    
+    unique_pairs = set()
+    for c in collisions:
+        i, j = c
+        if i < j: # Avoid double counting and self pairs
+            unique_pairs.add((active_indices[i], active_indices[j]))
+            
+    return list(unique_pairs)

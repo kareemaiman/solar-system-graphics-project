@@ -1,0 +1,6 @@
+PyOpenGL
+glfw
+imgui[glfw]
+PyGLM
+numpy
+pygame

@@ -1,0 +1,42 @@
+{
+  "celestial_bodies": [
+    {
+      "name": "Sun",
+      "type": "star",
+      "mass": 20000.0,
+      "position": [0.0, 0.0, 0.0],
+      "velocity": [0.0, 0.0, 0.0]
+    },
+    {
+      "name": "Earth",
+      "type": "planet",
+      "mass": 5.0,
+      "position": [60.0, 0.0, 0.0],
+      "velocity": [0.0, 0.0, -18.257418583505537]
+    },
+    {
+      "name": "Jupiter",
+      "type": "planet",
+      "mass": 30.0,
+      "position": [150.0, 0.0, 0.0],
+      "velocity": [0.0, 0.0, -11.547005383792515]
+    }
+  ],
+  "spaceship": {
+    "name": "The Orville",
+    "type": "ship",
+    "mass": 1.0,
+    "position": [100.0, 0.0, 100.0],
+    "velocity": [-15.0, 0.0, 15.0]
+  },
+  "asteroid_belt": {
+    "count": 500,
+    "radius_min": 200.0,
+    "radius_max": 300.0,
+    "y_variance": 6.0,
+    "vy_variance": 0.6,
+    "mass_min": 0.5,
+    "mass_max": 4.0,
+    "seed": 42
+  }
+}

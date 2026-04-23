@@ -7,19 +7,31 @@ AetherBound is a high-performance 3D space exploration simulation built with Mod
 1. **Data-Oriented Physics (Master State Matrix)**: 
    - All physics entities exist in a single global `N x 10` NumPy array (`dtype=float32`).
    - Columns: `[x, y, z, v_x, v_y, v_z, mass, yaw, pitch, active_flag]`
-2. **Graphics Engine**: 
-   - Strictly Modern OpenGL (VAOs, VBOs). No legacy `glBegin`/`glEnd`.
-   - Uses `trimesh` along with PIL (`Image`) to dynamically parse embedded `.glb` model textures and send them to the renderer as `GL_TEXTURE_2D`.
-3. **Camera System**:
-   - 3rd-Person Orbit Camera.
-   - Smooth trailing using a "Spring Arm" interpolation.
-4. **Graphical User Interface (GUI)**:
-   - Utilizes `imgui` (Dear PyGui) overlaid on top of the GLFW OpenGL context.
-   - Tied to `core/settings.py` for dynamic global variables (e.g., `MOUSE_SENSITIVITY`).
+2. **Metadata Entity System**:
+   - Every physical entity is mapped to an extensive metadata dictionary containing 14+ attributes (density, name, abundant element, angular momentum, friction, durability, etc.).
+3. **Graphics Engine**: 
+   - Strictly Modern OpenGL (VAOs, VBOs).
+   - Distributed rendering system with separate modules for GLB meshes, procedural primitives (spheres), and custom shaders.
+   - Dynamic Frustum Culling and Render Distance limits.
+   - Procedural shader-based crater systems for collision deformation.
+4. **Camera System**:
+   - 3rd-Person Orbit Camera strictly locked to ship orientation.
+5. **Gameplay Systems**:
+   - Weaponry (Missiles) using physical projectile entities.
+   - Scanning system utilizing world-space wave animations and metadata retrieval.
+   - Multi-layered audio system via `pygame`.
 
 ## File Structure
-- `main.py`: Entry point, windowing (GLFW), GUI logic (`imgui`), and game loop.
+- `main.py`: Entry point, decoupled physics/render loops, and state management.
 - `core/settings.py`: Global configuration state memory.
-- `physics/state.py`: Global Master State Matrix and raw vectorized operations.
-- `graphics/camera.py`: View Matrix generation and 3rd-person controls.
-- `graphics/renderer.py`: OpenGL state, VAO/VBO creation, draw calls, texture mapping, and GLSL shaders.
+- `core/metadata.py`: Management of the 14-attribute entity metadata.
+- `core/audio.py`: Pygame-based sound trigger engine.
+- `physics/engine.py`: Vectorized N-Body gravity and collision math.
+- `physics/state.py`: Global Master State Matrix management.
+- `graphics/renderer.py`: Master rendering coordinator.
+- `graphics/models/`: GLB loading and multi-mesh rendering (Ship, ISS, Rock, Missile).
+- `graphics/primitives/`: Procedural sphere generation for celestial bodies.
+- `graphics/shaders.py`: GLSL shader programs (including procedural craters).
+- `graphics/frustum.py`: Mathematical culling logic.
+- `gameplay/`: Modules for weapons and scanning logic.
+- `assets/`: Organized structure (models, sounds, textures, icons).
