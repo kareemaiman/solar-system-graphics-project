@@ -257,3 +257,21 @@ The core data flow in AetherBound follows a Data-Oriented Design. Data is loaded
   - **Method `get_active_mask`**: Generates a boolean mask array of all entities where ACTIVE == 1.0.
   - **Method `get_active_bodies`**: Returns an N x 10 view of only the currently active bodies.
   - **Method `apply_gravity`**: Delegate method that calls the optimized gravity solver.
+
+---
+
+## Team Assignments
+
+The development of the AetherBound project is distributed across an 8-person team, with each person focusing on a distinct component:
+
+- **Person 1**: Core System & Data Management (`core/logger.py`, `core/metadata.py`, `core/settings.py`, `core/data_manager.py`)
+- **Person 2**: User Interaction & Audio (`core/audio.py`, `core/input.py`, `gameplay/ui.py`)
+- **Person 3**: Core Engine & Application Entry (`main.py`, `run.py`, `gameplay/engine.py`)
+- **Person 4**: Gameplay Mechanics (`gameplay/scanner.py`, `gameplay/weapons.py`)
+- **Person 5**: Physics Simulation (`physics/collision.py`, `physics/engine.py`, `physics/gravity.py`, `physics/state.py`)
+- **Person 6**: Base Graphics Architecture (`graphics/renderer.py`, `graphics/shaders.py`, `graphics/camera.py`, `graphics/frustum.py`, `graphics/shapes.py`)
+- **Person 7**: Specialized Renderers (`graphics/renderers/celestial.py`, `graphics/renderers/effects.py`, `graphics/renderers/environment.py`, `graphics/renderers/instanced.py`, `graphics/renderers/mesh.py`)
+- **Person 8**: Asset Loading & 3D Primitives (`graphics/models/glb_loader.py`, `graphics/models/mesh.py`, `graphics/primitives/ring.py`, `graphics/primitives/sphere.py`)
+
+## Changelog
+- **Fix:** Corrected an indentation error in `core/settings.py` for the class attributes of `Settings` that was causing the game to crash on startup.

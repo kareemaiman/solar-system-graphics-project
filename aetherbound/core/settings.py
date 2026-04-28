@@ -8,9 +8,9 @@ class Settings:
     Returns:
 
     """
-     MOUSE_SENSITIVITY = 0.005 # Factor for turning speed
-     IS_PAUSED = False # Gameplay freeze state
-     SIMULATION_SPEED = 0.1 # Delta-time multiplier
-     # Audio Settings
-     AUDIO_ENABLED = True
-     MASTER_VOLUME = 0.5
+    MOUSE_SENSITIVITY = 0.005 # Factor for turning speed
+    IS_PAUSED = False # Gameplay freeze state
+    SIMULATION_SPEED = 0.1 # Delta-time multiplier
+    # Audio Settings
+    AUDIO_ENABLED = True
+    MASTER_VOLUME = 0.5
