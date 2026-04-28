@@ -1,18 +1,31 @@
-import sys
-from gameplay.engine import Engine
-from core.logger import logger
+import sys # Standard system library
+from gameplay.engine import Engine # Simulation core
+from core.logger import logger # Engine logger
 
 def main():
-    engine = Engine()
-    return engine.run()
+    """The persistent Application Loop.
+    Prevents recursion crashes by using an iterative approach to game restarts.
 
-if __name__ == '__main__':
+    Args:
+
+    Returns:
+      : None
+
+    """
     while True:
         try:
-            should_restart = main()
+            logger.info("Starting simulation session...")
+            engine = Engine()
+            should_restart = engine.run()
+            
             if not should_restart:
+                logger.info("Application shutting down normally.")
                 break
-            logger.info("Main loop re-initializing...")
+                
+            logger.info("Restart signal received. Re-initializing engine...")
         except Exception as e:
             logger.error(f"Fatal error in main loop: {e}", exc_info=True)
             break
+
+if __name__ == '__main__':
+    main()

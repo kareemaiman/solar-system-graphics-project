@@ -20,8 +20,9 @@
     "missile_lifetime": 8.0,
     "missile_mass": 0.01,
     "missile_radius": 0.2,
-    "missile_damage": 25.0,
+    "missile_damage": 100.0,
     "missile_scale": 0.25,
+    "missile_max_active": 5,
     "missile_model_path": "assets/models/missile.glb"
   },
   "scanner": {
@@ -30,7 +31,7 @@
   },
   "effects": {
     "explosion_max_radius": 50.0,
-    "explosion_expansion_speed": 1.5,
+    "explosion_expansion_speed": 0.4,
     "scanner_wave_width": 5.0,
     "explosion_color_core": [
       1.0,

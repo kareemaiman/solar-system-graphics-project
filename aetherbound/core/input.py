@@ -1,9 +1,25 @@
-import glfw
-import numpy as np
-from core.settings import Settings
+import glfw # GLFW bindings for window events and raw input
+import numpy as np # Vector math for movement vectors
+from core.settings import Settings # Global pause and sensitivity states
 
 class InputHandler:
+    """Bridges GLFW input events to engine systems (Camera, Spaceship).
+    Manages callbacks for mouse, keyboard, and scroll wheel.
+
+    Args:
+
+    Returns:
+
+    """
     def __init__(self, window, camera, cb_state):
+        """
+        Binds input listeners to the GLFW window.
+        
+        Args:
+            window: The active GLFW window context.
+            camera: Reference to the ThirdPersonCamera.
+            cb_state: Mutable dictionary for tracking mouse state.
+        """
         self.window = window
         self.camera = camera
         self.cb_state = cb_state
@@ -15,6 +31,21 @@ class InputHandler:
 
     @staticmethod
     def key_callback(window, key, scancode, action, mods):
+        """Handles discrete key presses (e.g., ESC for pause).
+        
+        Logic:
+            Toggles Settings.IS_PAUSED and switches cursor modes.
+
+        Args:
+          window: 
+          key: 
+          scancode: 
+          action: 
+          mods: 
+
+        Returns:
+
+        """
         if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
             Settings.IS_PAUSED = not Settings.IS_PAUSED
             if Settings.IS_PAUSED:
@@ -24,6 +55,19 @@ class InputHandler:
 
     @staticmethod
     def mouse_callback(window, xpos, ypos):
+        """Handles continuous mouse movement for camera orbiting.
+        
+        Math:
+            delta = current_pos - last_pos
+
+        Args:
+          window: 
+          xpos: 
+          ypos: 
+
+        Returns:
+
+        """
         if Settings.IS_PAUSED:
             return
             
@@ -45,6 +89,16 @@ class InputHandler:
 
     @staticmethod
     def scroll_callback(window, xoffset, yoffset):
+        """
+
+        Args:
+          window: 
+          xoffset: 
+          yoffset: 
+
+        Returns:
+
+        """
         if Settings.IS_PAUSED:
             return
         ptr = glfw.get_window_user_pointer(window)
@@ -53,6 +107,24 @@ class InputHandler:
         camera.process_scroll(yoffset)
 
     def process_ship_input(self, physics_state, spaceship_id, front, right, up, thrust_power=200.0):
+        """Translates WASD/Space/Ctrl into physical velocity in the simulation.
+        
+        Math:
+            Velocity_Vector = sum(Pressed_Key_Direction_Vectors)
+            Normalized_Velocity = Velocity_Vector.normalize() * Thrust_Power
+
+        Args:
+          front, right, up: Camera-relative direction vectors.
+          thrust_power(float, optional): Units per second speed. (Default value = 200.0)
+          physics_state: 
+          spaceship_id: 
+          front: 
+          right: 
+          up: 
+
+        Returns:
+
+        """
         thrust_vec = np.zeros(3, dtype=np.float32)
         any_pressed = False
         
@@ -81,6 +153,7 @@ class InputHandler:
             any_pressed = True
             
         if not any_pressed:
+            # Stop instantly if no keys are pressed (Arcade-style physics)
             physics_state.matrix[spaceship_id, 3:6] = 0.0
         else:
             length = np.linalg.norm(thrust_vec)

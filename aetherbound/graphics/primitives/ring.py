@@ -3,7 +3,23 @@ import OpenGL.GL as gl
 from graphics.models.mesh import Mesh
 
 def create_ring_mesh(inner_radius, outer_radius, sectors=64, texture_id=None):
-    """Generates a flat disc mesh for planetary rings."""
+    """Generates a flat disc mesh for planetary rings.
+    
+    Math:
+        Uses polar coordinates (radius, angle) converted to Cartesian (x, y, z)
+        to create a circle of triangles.
+        x = radius * cos(angle)
+        z = radius * sin(angle)
+
+    Args:
+      inner_radius: 
+      outer_radius: 
+      sectors:  (Default value = 64)
+      texture_id:  (Default value = None)
+
+    Returns:
+
+    """
     vertices = []
     normals = []
     uvs = []

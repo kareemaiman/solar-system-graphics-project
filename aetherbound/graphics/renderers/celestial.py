@@ -6,7 +6,23 @@ from graphics.primitives.sphere import create_sphere_mesh, load_texture
 from graphics.primitives.ring import create_ring_mesh
 
 class SphereRenderer:
+    """Specialized renderer for planets, stars, and skyboxes.
+    Supports dynamic lighting (up to 8 lights) and procedural cratering.
+
+    Args:
+
+    Returns:
+
+    """
     def __init__(self, texture_path=None, radius=1.0, is_skybox=False):
+        """
+        Initializes the sphere mesh and compiles the standard celestial shader.
+        
+        Args:
+            texture_path (str): File path to the planet's diffuse map.
+            radius (float): Size of the sphere.
+            is_skybox (bool): If True, disables depth writing and ignores world translation.
+        """
         self.texture_id = load_texture(texture_path) if texture_path else None
         self.mesh = create_sphere_mesh(radius=radius, sectors=64, stacks=32, texture_id=self.texture_id)
         self.is_skybox = is_skybox
@@ -19,8 +35,8 @@ class SphereRenderer:
         self.view_loc = gl.glGetUniformLocation(self.shader, "view")
         self.proj_loc = gl.glGetUniformLocation(self.shader, "projection")
         self.use_tex_loc = gl.glGetUniformLocation(self.shader, "use_texture")
-        self.impact_pos_loc = [gl.glGetUniformLocation(self.shader, f"impact_pos[{i}]") for i in range(8)]
-        self.impact_force_loc = [gl.glGetUniformLocation(self.shader, f"impact_force[{i}]") for i in range(8)]
+        self.impact_pos_loc = [gl.glGetUniformLocation(self.shader, f"impact_pos[{i}]") for i in range(32)]
+        self.impact_force_loc = [gl.glGetUniformLocation(self.shader, f"impact_force[{i}]") for i in range(32)]
         self.num_impacts_loc = gl.glGetUniformLocation(self.shader, "num_impacts")
         self.crater_radius_mult_loc = gl.glGetUniformLocation(self.shader, "crater_radius_mult")
         self.crater_perturbation_loc = gl.glGetUniformLocation(self.shader, "crater_perturbation")
@@ -35,6 +51,14 @@ class SphereRenderer:
         self.cam_pos_loc = gl.glGetUniformLocation(self.shader, "camera_view_pos")
 
     def set_lights(self, lights_data):
+        """Uploads lighting information to the GPU.
+
+        Args:
+          lights_data(list): List of light dictionaries {pos, color, intensity}.
+
+        Returns:
+
+        """
         gl.glUseProgram(self.shader)
         num = min(len(lights_data), 4)
         gl.glUniform1i(self.num_lights_loc, num)
@@ -44,6 +68,32 @@ class SphereRenderer:
             gl.glUniform1f(self.light_intensity_loc[i], lights_data[i]['intensity'])
 
     def draw(self, position, view_matrix, projection_matrix, scale=1.0, rotation=0.0, impacts=[], self_luminosity=0.0, camera_pos=[0,0,0], config=None):
+        """Performs the OpenGL draw call for the celestial body.
+        
+        Math (Craters):
+            - Impacts: Passed as LOCAL coordinates [x, y, z, force].
+            - Shader: Perturbs the surface normal using a distance-based falloff from impact centers.
+        
+        Math (Skybox):
+            - If is_skybox, removes translation from the view matrix so the
+              background never moves relative to the player.
+
+        Args:
+          position(vec3): Relative position from ship.
+          rotation(float, optional): Current spin around Y axis. (Default value = 0.0)
+          impacts(list, optional): Persistent damage points on the surface. (Default value = [])
+          self_luminosity(float, optional): Emissive intensity (used for Stars). (Default value = 0.0)
+          view_matrix: 
+          projection_matrix: 
+          scale:  (Default value = 1.0)
+          camera_pos:  (Default value = [0)
+          0: 
+          0]: 
+          config:  (Default value = None)
+
+        Returns:
+
+        """
         gl.glDisable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
@@ -75,7 +125,7 @@ class SphereRenderer:
         gl.glUniformMatrix4fv(self.view_loc, 1, gl.GL_FALSE, glm.value_ptr(view_to_use))
         gl.glUniformMatrix4fv(self.proj_loc, 1, gl.GL_FALSE, glm.value_ptr(projection_matrix))
         
-        num_c = min(len(impacts), 8)
+        num_c = min(len(impacts), 32)
         gl.glUniform1i(self.num_impacts_loc, num_c)
         for i in range(num_c):
             gl.glUniform3f(self.impact_pos_loc[i], *impacts[i][0])
@@ -99,6 +149,7 @@ class SphereRenderer:
         gl.glEnable(gl.GL_CULL_FACE)
 
 class RingRenderer:
+    """Renders planetary rings (like Saturn's) using a flattened disk primitive."""
     def __init__(self, texture_path, inner_radius=1.2, outer_radius=2.4):
         self.texture_id = load_texture(texture_path)
         self.mesh = create_ring_mesh(inner_radius, outer_radius, texture_id=self.texture_id)
@@ -122,6 +173,14 @@ class RingRenderer:
         self.cam_pos_loc = gl.glGetUniformLocation(self.shader, "camera_view_pos")
 
     def set_lights(self, lights_data):
+        """
+
+        Args:
+          lights_data: 
+
+        Returns:
+
+        """
         gl.glUseProgram(self.shader)
         num = min(len(lights_data), 4)
         gl.glUniform1i(self.num_lights_loc, num)
@@ -131,6 +190,25 @@ class RingRenderer:
             gl.glUniform1f(self.light_intensity_loc[i], lights_data[i]['intensity'])
 
     def draw(self, position, view_matrix, projection_matrix, scale=1.0, self_luminosity=0.0, camera_pos=[0,0,0]):
+        """Renders the ring disk.
+        
+        Math:
+            - Tilt: Rotates the ring by 25 degrees (Saturn-like obliquity).
+            - Blending: Uses Alpha channel for gaps between rings.
+
+        Args:
+          position: 
+          view_matrix: 
+          projection_matrix: 
+          scale:  (Default value = 1.0)
+          self_luminosity:  (Default value = 0.0)
+          camera_pos:  (Default value = [0)
+          0: 
+          0]: 
+
+        Returns:
+
+        """
         gl.glUseProgram(self.shader)
         gl.glUniform3f(self.cam_pos_loc, *camera_pos)
         gl.glEnable(gl.GL_BLEND)

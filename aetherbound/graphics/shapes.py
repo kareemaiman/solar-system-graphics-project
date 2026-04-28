@@ -2,9 +2,16 @@ import numpy as np
 import math
 
 def generate_uv_sphere(radius=1.0, sectors=36, stacks=18):
-    """
-    Procedurally constructs a 3D unit sphere returning explicit arrays mapping
+    """Procedurally constructs a 3D unit sphere returning explicit arrays mapping
     vertices, normals, UV wraps, and face indices.
+
+    Args:
+      radius:  (Default value = 1.0)
+      sectors:  (Default value = 36)
+      stacks:  (Default value = 18)
+
+    Returns:
+
     """
     vertices = []
     normals = []

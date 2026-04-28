@@ -5,9 +5,17 @@ from PIL import Image
 from graphics.models.mesh import Mesh
 
 class GLBLoader:
+    """ """
     @staticmethod
     def load(filepath):
-        """Loads a GLB and returns a list of Mesh objects to support multi-mesh GLBs."""
+        """Loads a GLB and returns a list of Mesh objects to support multi-mesh GLBs.
+
+        Args:
+          filepath: 
+
+        Returns:
+
+        """
         scene_or_mesh = trimesh.load(filepath, force='scene')
         
         meshes = []

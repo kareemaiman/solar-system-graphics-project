@@ -2,6 +2,7 @@ import OpenGL.GL as gl
 import numpy as np
 
 class Mesh:
+    """ """
     def __init__(self, vertices, normals, uvs, indices, texture_id=None):
         self.vertices = vertices
         self.normals = normals
@@ -14,6 +15,7 @@ class Mesh:
         self.vao, self.index_count = self._build_vbo()
         
     def _build_vbo(self):
+        """ """
         vertex_data = np.hstack([self.vertices.reshape(-1, 3), 
                                  self.normals.reshape(-1, 3), 
                                  self.uvs.reshape(-1, 2)]).flatten()
@@ -44,6 +46,7 @@ class Mesh:
         return vao, len(self.indices.flatten())
         
     def draw(self):
+        """ """
         gl.glBindVertexArray(self.vao)
         gl.glDrawElements(gl.GL_TRIANGLES, self.index_count, gl.GL_UNSIGNED_INT, None)
         gl.glBindVertexArray(0)

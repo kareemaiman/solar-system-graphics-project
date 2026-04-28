@@ -2,6 +2,17 @@ import numpy as np
 import json
 
 def debug_crater_math(ship_pos, planet_pos, impact_world_pos, radius_mult):
+    """
+
+    Args:
+      ship_pos: 
+      planet_pos: 
+      impact_world_pos: 
+      radius_mult: 
+
+    Returns:
+
+    """
     rel = planet_pos - ship_pos
     impact_local = impact_world_pos - planet_pos
     rel_impact = rel + impact_local

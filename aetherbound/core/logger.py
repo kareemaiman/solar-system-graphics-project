@@ -1,8 +1,15 @@
-import logging
-import os
+import logging # Standard Python logging library
+import os # For path creation
 
 def setup_logger():
-    """Configures the global logger for AetherBound."""
+    """Configures a dual-output logger for the engine.
+    Logs are sent to both the console (INFO+) and a file (DEBUG+).
+
+    Args:
+
+    Returns:
+
+    """
     logger = logging.getLogger("AetherBound")
     logger.setLevel(logging.DEBUG)
     

@@ -1,24 +1,25 @@
-import numpy as np
+import numpy as np # Used for memory-mapped-like state matrix storage
 
 class PhysicsState:
-    """
-    Data-Oriented Master State Matrix for all physical bodies.
-    Manages an N x 10 NumPy array of dtype float64 (f8).
+    """Master Registry for all physical entities in the simulation.
+    Uses a Data-Oriented Design (DOD) approach by storing all entity properties
+    in a contiguous NumPy matrix for cache-friendly vectorized processing.
     
-    Columns:
-        0: x
-        1: y
-        2: z
-        3: v_x
-        4: v_y
-        5: v_z
-        6: mass
-        7: yaw
-        8: pitch
-        9: active_flag (1.0 = Active, 0.0 = Inactive/Deleted)
+    The N x 10 matrix is structured as follows:
+    
+    Matrix Columns:
+        0-2: Position (X, Y, Z) - World space coordinates.
+        3-5: Velocity (VX, VY, VZ) - Units per simulation second.
+        6:   Mass - Scalar mass used for gravitational pull calculations.
+        7-8: Yaw, Pitch - Visual orientation (rotation around Y and local X).
+        9:   Active Flag - 1.0 if the entity exists, 0.0 if it is deleted/available.
+
+    Args:
+
+    Returns:
+
     """
     
-    # Column semantic indices for improved readability
     X, Y, Z = 0, 1, 2
     VX, VY, VZ = 3, 4, 5
     MASS = 6
@@ -26,7 +27,12 @@ class PhysicsState:
     ACTIVE = 9
 
     def __init__(self, max_bodies=10000):
-        # A 2D array of (max_bodies, 10) initialized to zeros with 'f4' constraints
+        """
+        Allocates the contiguous memory block for the simulation state.
+        
+        Args:
+            max_bodies (int): The maximum number of physical entities allowed simultaneously.
+        """
         self.max_bodies = max_bodies
         self.matrix = np.zeros((self.max_bodies, 10), dtype=np.float64)
         
@@ -43,9 +49,24 @@ class PhysicsState:
         self.spawn_count = 0
 
     def add_body(self, position, velocity, mass, radius=1.0, yaw=0.0, pitch=0.0):
-        """
-        Spawns a new celestial body and returns its index.
-        Finds the first inactive row and overwrites it.
+        """Spawns a new entity by finding the first available slot in the matrix.
+        
+        Math:
+            Uses np.where(ACTIVE == 0.0) to find free indices.
+
+        Args:
+          position, velocity: Initial 3D vectors.
+          mass(float): Mass of the object.
+          radius(float, optional): Physical size for collision detection. (Default value = 1.0)
+          yaw, pitch: Starting rotation.
+          position: 
+          velocity: 
+          yaw:  (Default value = 0.0)
+          pitch:  (Default value = 0.0)
+
+        Returns:
+          int: The index (ID) of the entity in the global matrix.
+
         """
         # Find first inactive slot
         inactive_indices = np.where(self.matrix[:, self.ACTIVE] == 0.0)[0]
@@ -66,29 +87,50 @@ class PhysicsState:
         return idx
         
     def delete_body(self, idx):
-        """
-        Logically deletes a body by clearing its active flag.
-        Sets mass to 0, which ignores it in Newtonian equations.
+        """Logically removes an entity from the simulation.
+        
+        Action:
+            Sets ACTIVE to 0.0 so renderers and physics loops ignore it.
+            Sets MASS to 0.0 so it no longer exerts gravitational pull.
+
+        Args:
+          idx(int): The matrix index to clear.
+
+        Returns:
+
         """
         self.matrix[idx, self.ACTIVE] = 0.0
         self.matrix[idx, self.MASS] = 0.0
         
     def get_active_mask(self):
-        """
-        Returns a boolean mask of active bodies for vectorized operations.
+        """Generates a boolean mask array of all entities where ACTIVE == 1.0.
+        This mask is used to perform sub-selections of the matrix without loops.
+
+        Args:
+
+        Returns:
+          np.ndarray: Boolean array of shape (max_bodies,).
+
         """
         return self.matrix[:, self.ACTIVE] == 1.0
 
     def get_active_bodies(self):
-        """
-        Returns an N x 10 view of only the currently active bodies.
-        """
+        """Returns an N x 10 view of only the currently active bodies."""
         mask = self.get_active_mask()
         return self.matrix[mask]
     
     def apply_gravity(self, dt, G=1.0):
-        """
-        Updates positions and velocities of all active bodies via N-Body gravity.
+        """Delegate method that calls the optimized gravity solver.
+        
+        References:
+            - physics.gravity.update_physics
+
+        Args:
+          dt(float): Time step.
+          G(float, optional): Gravity constant. (Default value = 1.0)
+
+        Returns:
+
         """
         from .engine import update_physics
         mask = self.get_active_mask()

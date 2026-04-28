@@ -6,7 +6,21 @@ from graphics.shaders import DUST_VERTEX, DUST_FRAGMENT
 from graphics.primitives.sphere import load_texture
 
 class SpaceDustRenderer:
+    """Renders floating 'space dust' particles around the camera.
+    Uses a looping coordinate system to create an infinite field effect.
+
+    Args:
+
+    Returns:
+
+    """
     def __init__(self, num_particles=1000, spread=200.0):
+        """
+        Generates a cloud of random points.
+        
+        Math:
+            Particle positions are randomized within a [-spread/2, +spread/2] cube.
+        """
         self.num_particles = num_particles
         np.random.seed(42)
         positions = (np.random.rand(num_particles, 3) * spread - (spread / 2.0)).astype(np.float32)
@@ -32,6 +46,23 @@ class SpaceDustRenderer:
         self.cam_pos_loc = gl.glGetUniformLocation(self.shader, "camera_pos")
 
     def draw(self, view_matrix, projection_matrix, camera_pos_f64):
+        """Renders particles as OpenGL Points.
+        
+        Math (Infinite Loop):
+            The DUST_VERTEX shader uses the modulo operator:
+            pos = mod(pos - camera_pos + offset, spread) - offset
+            This ensures that as the camera moves, particles that leave
+            one side of the 'cube' wrap around to the other side,
+            creating the illusion of an endless field.
+
+        Args:
+          view_matrix: 
+          projection_matrix: 
+          camera_pos_f64: 
+
+        Returns:
+
+        """
         gl.glUseProgram(self.shader)
         gl.glUniformMatrix4fv(self.view_loc, 1, gl.GL_FALSE, glm.value_ptr(view_matrix))
         gl.glUniformMatrix4fv(self.proj_loc, 1, gl.GL_FALSE, glm.value_ptr(projection_matrix))
@@ -44,6 +75,7 @@ class SpaceDustRenderer:
         gl.glDisable(gl.GL_PROGRAM_POINT_SIZE)
 
 class BackgroundRenderer:
+    """Renders a static 2D image covering the entire screen (Loading screen background)."""
     def __init__(self, texture_path):
         self.texture_id = load_texture(texture_path)
         vertices = np.array([
@@ -93,6 +125,15 @@ class BackgroundRenderer:
         self.shader = gl.shaders.compileProgram(vs, fs)
 
     def draw(self):
+        """Renders a screen-space quad.
+        
+        Logic: Disables depth testing to ensure the image appears behind everything.
+
+        Args:
+
+        Returns:
+
+        """
         gl.glDisable(gl.GL_DEPTH_TEST)
         gl.glUseProgram(self.shader)
         gl.glActiveTexture(gl.GL_TEXTURE0)

@@ -1,9 +1,23 @@
-import sys
-import subprocess
-import os
-import time
+import sys # For executable path and exit codes
+import subprocess # To run PIP as a separate process
+import os # Filesystem checks
+import time # For retry delays
 
 def install_requirements():
+    """Ensures all third-party libraries are installed before the engine starts.
+    
+    Logic:
+        1. Checks for module imports (glfw, imgui, etc.).
+        2. If missing, attempts 'pip install -r requirements.txt'.
+        3. On failure, attempts individual package recovery with fallback logic
+           (e.g., trying 'imgui' if 'imgui[glfw]' fails).
+        4. Retries up to 2 times before giving up.
+
+    Args:
+
+    Returns:
+
+    """
     req_file = "requirements.txt"
     if not os.path.exists(req_file):
         print(f"Error: {req_file} not found.")
@@ -91,8 +105,18 @@ def install_requirements():
     sys.exit(1)
 
 if __name__ == "__main__":
+    """
+    Bootstrapper Entry Point.
+    
+    Sequence:
+        1. Verify Dependencies.
+        2. Import 'main' (deferred to after installation).
+        3. Launch game loop.
+        4. Catch and log fatal initialization errors.
+    """
     install_requirements()
     try:
+        # Deferred import ensures 'main' is loaded ONLY after pip finishes
         import main
         main.main()
     except Exception as e:

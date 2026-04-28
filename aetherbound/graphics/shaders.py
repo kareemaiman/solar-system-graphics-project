@@ -37,8 +37,8 @@ uniform sampler2D texture_sampler;
 uniform bool use_texture;
 uniform vec3 base_color;
 
-uniform vec3 impact_pos[8];
-uniform float impact_force[8];
+uniform vec3 impact_pos[32];
+uniform float impact_force[32];
 uniform int num_impacts;
 
 uniform float crater_radius_mult;
@@ -264,7 +264,7 @@ void main() {
         vec3 color = mix(core_color_u, edge_color_u, t * (1.2 - n * 0.4));
         
         // Boost glow and apply life-based fade
-        float alpha = alpha_edge * life * (0.6 + n * 0.4);
+        float alpha = clamp(alpha_edge * life * (1.1 + n * 0.3), 0.0, 1.0);
         vec3 final_color = color * (2.0 + n * 1.5);
         
         // Tone Mapping

@@ -1,17 +1,32 @@
-import pygame
-import os
-from .settings import Settings
+import pygame # Used for cross-platform audio mixing and playback
+import os # Standard filesystem access
+from .settings import Settings # Global audio volume toggles
 
 class AudioManager:
-    """
-    Handles loading and playback of sound effects using pygame.mixer.
-    Supports concurrent sound layering for a rich atmospheric experience.
+    """Singleton manager for the game's audio subsystem.
+    Encapsulates Pygame Mixer to provide layered sound effects (SFX)
+    without blocking the main simulation thread.
+
+    Args:
+
+    Returns:
+
     """
     _sounds = {}
     _initialized = False
 
     @classmethod
     def init(cls):
+        """Initializes the Pygame mixer and pre-loads all sound assets.
+        
+        References:
+            - pygame.mixer.init()
+
+        Args:
+
+        Returns:
+
+        """
         if not Settings.AUDIO_ENABLED:
             return
         
@@ -25,6 +40,16 @@ class AudioManager:
 
     @classmethod
     def _load_assets(cls):
+        """Scans the assets directory and binds audio files to internal keys.
+        
+        Math (Volume):
+            Initializes sound volume using the MASTER_VOLUME setting.
+
+        Args:
+
+        Returns:
+
+        """
         sound_dir = "assets/sounds"
         if not os.path.exists(sound_dir):
             return
@@ -45,6 +70,18 @@ class AudioManager:
 
     @classmethod
     def play(cls, sound_name, volume_mult=1.0):
+        """Triggers a sound effect.
+        
+        Math:
+            Effective Volume = Master Volume * Instance Multiplier.
+
+        Args:
+          sound_name(str): The key (e.g., 'explosion') to play.
+          volume_mult(float, optional): Temporary volume adjustment for this instance. (Default value = 1.0)
+
+        Returns:
+
+        """
         if not cls._initialized or not Settings.AUDIO_ENABLED:
             return
         
@@ -56,5 +93,6 @@ class AudioManager:
 
     @classmethod
     def stop_all(cls):
+        """ """
         if cls._initialized:
             pygame.mixer.stop()

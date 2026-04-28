@@ -7,7 +7,24 @@ from graphics.models.glb_loader import GLBLoader
 from graphics.primitives.sphere import create_sphere_mesh, load_texture
 
 class InstancedRenderer:
+    """High-performance renderer for drawing thousands of similar objects (Asteroids).
+    Uses Hardware Instancing to send one mesh to the GPU and draw it many times
+    with different offsets/scales in a single draw call.
+
+    Args:
+
+    Returns:
+
+    """
     def __init__(self, model_path_or_texture=None, is_glb=False, base_radius=1.0):
+        """
+        Initializes the geometry and sets up the instance VBO.
+        
+        Args:
+            model_path_or_texture: Asset to replicate.
+            is_glb (bool): True if loading a 3D model.
+            base_radius (float): Size used for sphere primitives.
+        """
         if is_glb:
             self.mesh = GLBLoader.load(model_path_or_texture)[0]
         else:
@@ -22,6 +39,7 @@ class InstancedRenderer:
         self.proj_loc = gl.glGetUniformLocation(self.shader, "projection")
         self.use_tex_loc = gl.glGetUniformLocation(self.shader, "use_texture")
         
+        # Initialize the Vertex Buffer Object (VBO) for instance data (positions/scales)
         self.instance_vbo = gl.glGenBuffers(1)
 
         self.light_pos_loc = [gl.glGetUniformLocation(self.shader, f"light_pos[{i}]") for i in range(4)]
@@ -39,6 +57,14 @@ class InstancedRenderer:
         self.cam_pos_loc = gl.glGetUniformLocation(self.shader, "camera_view_pos")
 
     def set_lights(self, lights_data):
+        """
+
+        Args:
+          lights_data: 
+
+        Returns:
+
+        """
         gl.glUseProgram(self.shader)
         num = min(len(lights_data), 4)
         gl.glUniform1i(self.num_lights_loc, num)
@@ -48,6 +74,26 @@ class InstancedRenderer:
             gl.glUniform1f(self.light_intensity_loc[i], lights_data[i]['intensity'])
 
     def draw_instanced(self, view_matrix, projection_matrix, offsets_scales_array, self_luminosity=0.0, camera_pos=[0,0,0], config=None):
+        """Executes the instanced draw call.
+        
+        Math (Attribute Stride):
+            The instance data is a flattened NumPy array: [x, y, z, scale, x, y, z, scale, ...]
+            Each element is a 4-byte float.
+            Stride = 4 floats * 4 bytes = 16 bytes.
+
+        Args:
+          offsets_scales_array(np.ndarray): N x 4 array of [x, y, z, scale] for all instances.
+          camera_pos(vec3, optional): Used for specular highlights. (Default value = [0)
+          view_matrix: 
+          projection_matrix: 
+          self_luminosity:  (Default value = 0.0)
+          0: 
+          0]: 
+          config:  (Default value = None)
+
+        Returns:
+
+        """
         count = len(offsets_scales_array)
         if count == 0:
             return
@@ -78,18 +124,23 @@ class InstancedRenderer:
 
         gl.glBindVertexArray(self.mesh.vao)
         
+        # Update the instance VBO with the latest positions from physics
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.instance_vbo)
         gl.glBufferData(gl.GL_ARRAY_BUFFER, offsets_scales_array.nbytes, offsets_scales_array, gl.GL_DYNAMIC_DRAW)
         
         stride = 4 * 4 
         
+        # Attribute 3: Position Offset (vec3)
         gl.glVertexAttribPointer(3, 3, gl.GL_FLOAT, gl.GL_FALSE, stride, gl.ctypes.c_void_p(0))
         gl.glEnableVertexAttribArray(3)
+        # Tell OpenGL to increment this attribute once per INSTANCE, not once per vertex
         gl.glVertexAttribDivisor(3, 1)
         
+        # Attribute 4: Instance Scale (float)
         gl.glVertexAttribPointer(4, 1, gl.GL_FLOAT, gl.GL_FALSE, stride, gl.ctypes.c_void_p(12))
         gl.glEnableVertexAttribArray(4)
         gl.glVertexAttribDivisor(4, 1)
 
+        # Draw everything in one GPU command
         gl.glDrawElementsInstanced(gl.GL_TRIANGLES, self.mesh.index_count, gl.GL_UNSIGNED_INT, None, count)
         gl.glBindVertexArray(0)

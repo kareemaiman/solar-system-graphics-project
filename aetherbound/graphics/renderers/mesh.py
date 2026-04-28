@@ -1,12 +1,29 @@
-import OpenGL.GL as gl
-import OpenGL.GL.shaders
-import glm
-import numpy as np
+import OpenGL.GL as gl # Standard OpenGL bindings
+import OpenGL.GL.shaders # Shader compilation
+import glm # OpenGL Mathematics
+import numpy as np # Used for coordinate manipulation
 from graphics.shaders import STANDARD_VERTEX, STANDARD_FRAGMENT
 from graphics.models.glb_loader import GLBLoader
 
 class MultiMeshRenderer:
+    """General-purpose renderer for complex 3D models (GLB format).
+    Handles hierarchical mesh structures and specialized orientation logic
+    for ships and missiles.
+
+    Args:
+
+    Returns:
+
+    """
     def __init__(self, model_path, initial_scale=1.0, is_ship=False, is_missile=False):
+        """
+        Loads 3D model data from a GLB file.
+        
+        Args:
+            model_path (str): File path to the .glb asset.
+            initial_scale (float): Base scaling factor.
+            is_ship, is_missile (bool): Boolean flags for special alignment rotations.
+        """
         self.scale = initial_scale
         self.meshes = GLBLoader.load(model_path)
         self.is_ship = is_ship
@@ -20,8 +37,8 @@ class MultiMeshRenderer:
         self.view_loc = gl.glGetUniformLocation(self.shader, "view")
         self.proj_loc = gl.glGetUniformLocation(self.shader, "projection")
         self.use_tex_loc = gl.glGetUniformLocation(self.shader, "use_texture")
-        self.impact_pos_loc = [gl.glGetUniformLocation(self.shader, f"impact_pos[{i}]") for i in range(8)]
-        self.impact_force_loc = [gl.glGetUniformLocation(self.shader, f"impact_force[{i}]") for i in range(8)]
+        self.impact_pos_loc = [gl.glGetUniformLocation(self.shader, f"impact_pos[{i}]") for i in range(32)]
+        self.impact_force_loc = [gl.glGetUniformLocation(self.shader, f"impact_force[{i}]") for i in range(32)]
         self.num_impacts_loc = gl.glGetUniformLocation(self.shader, "num_impacts")
         self.crater_radius_mult_loc = gl.glGetUniformLocation(self.shader, "crater_radius_mult")
         self.crater_perturbation_loc = gl.glGetUniformLocation(self.shader, "crater_perturbation")
@@ -36,6 +53,14 @@ class MultiMeshRenderer:
         self.cam_pos_loc = gl.glGetUniformLocation(self.shader, "camera_view_pos")
 
     def set_lights(self, lights_data):
+        """Updates global lighting uniforms.
+
+        Args:
+          lights_data: List of active light sources.
+
+        Returns:
+
+        """
         gl.glUseProgram(self.shader)
         num = min(len(lights_data), 8)
         gl.glUniform1i(self.num_lights_loc, num)
@@ -45,6 +70,36 @@ class MultiMeshRenderer:
             gl.glUniform1f(self.light_intensity_loc[i], lights_data[i]['intensity'])
 
     def draw(self, position, view_matrix, projection_matrix, yaw=0.0, pitch=0.0, impacts=[], self_luminosity=0.0, camera_pos=[0,0,0], config=None):
+        """Renders all meshes in the model hierarchy.
+        
+        Math (Orientation):
+            1. Translation: Move to relative position.
+            2. Rotation (Yaw): Orbit orientation.
+            3. Rotation (Pitch): Tilt orientation.
+            4. Model-Specific Corrections: Compensates for model files whose
+               internal 'forward' axis doesn't match the engine convention (+Z).
+            5. Scale: Normalizes mesh size.
+
+        Args:
+          yaw(float, optional): Rotation around Y axis in radians. (Default value = 0.0)
+          pitch(float, optional): Rotation around X axis in radians.
+        References: (Default value = 0.0)
+          pitch(float, optional): Rotation around X axis in radians.
+        References:
+        - graphics.models.glb_loader.GLBLoader (Default value = 0.0)
+          position: 
+          view_matrix: 
+          projection_matrix: 
+          impacts:  (Default value = [])
+          self_luminosity:  (Default value = 0.0)
+          camera_pos:  (Default value = [0)
+          0: 
+          0]: 
+          config:  (Default value = None)
+
+        Returns:
+
+        """
         gl.glUseProgram(self.shader)
         gl.glUniform3f(self.cam_pos_loc, *camera_pos)
         
@@ -65,12 +120,14 @@ class MultiMeshRenderer:
         model = glm.rotate(model, -pitch, glm.vec3(1.0, 0.0, 0.0))
         
         if self.is_ship:
-            # Special alignment for Orville model
+            # Model Alignment Correction:
+            # Adjusts the 'Orville' model to face forward along the trajectory.
             model = glm.rotate(model, glm.radians(-90.0), glm.vec3(0.0, 1.0, 0.0))
             model = glm.rotate(model, glm.radians(-90.0), glm.vec3(1.0, 0.0, 0.0))
             model = glm.rotate(model, glm.radians(20.0), glm.vec3(0.0, 1.0, 0.0))
         elif self.is_missile:
-            # Rotate 90 deg around Y to align X-pointing model to Z trajectory
+            # Model Alignment Correction:
+            # Standardizes missile orientation.
             model = glm.rotate(model, glm.radians(0.0), glm.vec3(0.0, 1.0, 0.0))
         
         model = glm.scale(model, glm.vec3(self.scale))
@@ -79,7 +136,7 @@ class MultiMeshRenderer:
         gl.glUniformMatrix4fv(self.view_loc, 1, gl.GL_FALSE, glm.value_ptr(view_matrix))
         gl.glUniformMatrix4fv(self.proj_loc, 1, gl.GL_FALSE, glm.value_ptr(projection_matrix))
         
-        num_c = min(len(impacts), 8)
+        num_c = min(len(impacts), 32)
         gl.glUniform1i(self.num_impacts_loc, num_c)
         for i in range(num_c):
             gl.glUniform3f(self.impact_pos_loc[i], *impacts[i][0])
@@ -93,6 +150,7 @@ class MultiMeshRenderer:
         else:
             gl.glUniform3f(self.base_color_loc, 0.6, 0.6, 0.7)
 
+        # Render Loop for Multi-Mesh assets
         for mesh in self.meshes:
             gl.glUniform1i(self.use_tex_loc, int(mesh.has_texture))
             if mesh.has_texture:

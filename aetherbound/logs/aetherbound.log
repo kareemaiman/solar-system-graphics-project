@@ -1,4 +1,7 @@
-2026-04-23 23:19:12,188 - AetherBound - INFO - Game started.
-2026-04-23 23:19:39,536 - AetherBound - INFO - Entity 67 (Homing-Missile) destroyed.
-2026-04-23 23:19:49,163 - AetherBound - INFO - Entity 6 (Mars) destroyed.
-2026-04-23 23:20:16,932 - AetherBound - INFO - Game Over! Collision between ship and body 11
+2026-04-28 17:34:10,998 - AetherBound - INFO - Starting simulation session...
+2026-04-28 17:34:23,882 - AetherBound - INFO - Game started.
+2026-04-28 17:34:27,899 - AetherBound - INFO - Game Over! Collision between ship and body 1
+2026-04-28 17:34:29,333 - AetherBound - INFO - RESTART BUTTON CLICKED: Preparing system reset.
+2026-04-28 17:34:29,541 - AetherBound - INFO - Restart signal received. Re-initializing engine...
+2026-04-28 17:34:29,541 - AetherBound - INFO - Starting simulation session...
+2026-04-28 17:34:42,072 - AetherBound - INFO - Application shutting down normally.

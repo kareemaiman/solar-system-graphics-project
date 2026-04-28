@@ -1,13 +1,26 @@
-import OpenGL.GL as gl
-import OpenGL.GL.shaders
-import glm
-import numpy as np
+import OpenGL.GL as gl # Direct access to GPU state and draw calls
+import OpenGL.GL.shaders # Utilities for compiling GLSL
+import glm # OpenGL Mathematics
+import numpy as np # Used for coordinate offsets
 
 class EffectRenderer:
-    """
-    Renders specialized procedural effects like the Scanner Wave and Explosions.
+    """Renders specialized procedural effects like the Scanner Wave and Explosions.
+    These effects utilize spherical math and alpha blending to simulate
+    translucent, expanding volumes.
+
+    Args:
+
+    Returns:
+
     """
     def __init__(self):
+        """
+        Initializes shaders and pre-loads a sphere mesh shared by all effects.
+        
+        References:
+            - graphics.shaders (SCANNER_FRAGMENT, EXPLOSION_FRAGMENT)
+            - graphics.primitives.sphere (create_sphere_mesh)
+        """
         from graphics.shaders import STANDARD_VERTEX, SCANNER_FRAGMENT, EXPLOSION_FRAGMENT
         from graphics.primitives.sphere import create_sphere_mesh
         
@@ -45,6 +58,22 @@ class EffectRenderer:
         self.wave_width_loc = gl.glGetUniformLocation(self.shader, "wave_width")
 
     def draw_scanner(self, center_pos, radius, view_matrix, projection_matrix):
+        """Renders the holographic radar wave.
+        
+        Math:
+            - Model Matrix: Translates to ship center and scales to the current wave radius.
+            - Shader: Uses the distance from fragment to center_pos to draw a thin glowing ring.
+
+        Args:
+          center_pos(vec3): Origin of the wave.
+          radius(float): Current expansion distance.
+          view_matrix, projection_matrix: Camera matrices.
+          view_matrix: 
+          projection_matrix: 
+
+        Returns:
+
+        """
         if radius <= 0:
             return
             
@@ -73,6 +102,18 @@ class EffectRenderer:
         gl.glUseProgram(0)
 
     def trigger_explosion(self, world_pos, current_frame, config, scale_mult=1.0):
+        """Adds a new explosion instance to the simulation.
+
+        Args:
+          world_pos(vec3): World coordinates of the impact.
+          current_frame(int): Frame number for timing.
+          config(dict): Visual settings from game_config.json.
+          scale_mult(float, optional): Size multiplier based on the target's radius.
+        Effect: Appends metadata to self.active_explosions. (Default value = 1.0)
+
+        Returns:
+
+        """
         self.active_explosions.append({
             "world_pos": np.array(world_pos),
             "radius": 0.0,
@@ -84,6 +125,20 @@ class EffectRenderer:
         })
 
     def update_explosions(self, current_frame):
+        """Updates the radius of all active explosions.
+        
+        Math:
+            Radius = Elapsed_Frames * Expansion_Speed
+        
+        Cleanup:
+            Removes explosions that have exceeded their max_radius.
+
+        Args:
+          current_frame: 
+
+        Returns:
+
+        """
         for exp in self.active_explosions[:]:
             elapsed = current_frame - exp["start_frame"]
             exp["radius"] = elapsed * exp["expansion_speed"]
@@ -91,6 +146,22 @@ class EffectRenderer:
                 self.active_explosions.remove(exp)
 
     def draw_explosions(self, view_matrix, projection_matrix, current_ship_world_pos, time_val):
+        """Batch-renders all active explosions.
+        
+        Graphics Logic:
+            - Disables Depth Mask: Explosions are translucent and don't block pixels.
+            - Additive Blending: glBlendFunc(SRC_ALPHA, ONE) - makes overlapping explosions brighter.
+            - Shader: Procedural noise generates the "fuzzy" fireball look.
+
+        Args:
+          current_ship_world_pos: Used to convert world coords to relative view coords.
+          time_val: Seed for procedural noise animation.
+          view_matrix: 
+          projection_matrix: 
+
+        Returns:
+
+        """
         if not self.active_explosions:
             return
 

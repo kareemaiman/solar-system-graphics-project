@@ -1,12 +1,13 @@
-import glfw
-from OpenGL.GL import *
-import glm
-import numpy as np
+import glfw # Windowing and Input library
+from OpenGL.GL import * # Main rendering API
+import glm # OpenGL Mathematics for matrix/vector operations
+import numpy as np # Used for state matrix manipulation
 import sys
-import imgui
+import imgui # Immediate Mode GUI for HUD and Menus
 import math
 from imgui.integrations.glfw import GlfwRenderer
 
+# Internal imports from the AetherBound engine
 from physics.state import PhysicsState
 from physics.engine import detect_collisions
 from graphics.camera import ThirdPersonCamera
@@ -23,6 +24,15 @@ from gameplay.scanner import ScannerSystem
 from gameplay.ui import UIManager
 
 class Engine:
+    """The central coordinator of the AetherBound simulation.
+    Handles the high-level game loop, state transitions, and orchestrates
+    communication between physics, graphics, and gameplay systems.
+
+    Args:
+
+    Returns:
+
+    """
     def __init__(self):
         self.game_config = DataManager.load_config()
         Settings.MOUSE_SENSITIVITY = self.game_config["engine"]["mouse_sensitivity_default"]
@@ -39,6 +49,17 @@ class Engine:
         self.last_frame_time = 0.0
 
     def init_window(self):
+        """Initializes the GLFW window and OpenGL context.
+        
+        Math/Graphics:
+            - Sets OpenGL 3.3 Core Profile.
+            - Initializes ImGui for UI rendering.
+
+        Args:
+
+        Returns:
+
+        """
         if not glfw.init():
             logger.error("Failed to initialize GLFW")
             return False
@@ -66,12 +87,34 @@ class Engine:
         return True
 
     def run(self):
+        """The Main Game Loop.
+        
+        Workflow:
+            1. Setup Renderers and Simulation State.
+            2. Enter the while loop.
+            3. Process Inputs (GLFW).
+            4. Fixed Time-Step Physics Update (Semi-Implicit Euler).
+            5. Collision Detection and Gameplay Trigger Resolution.
+            6. Frustum Culling and Scene Rendering.
+            7. ImGui HUD Overlay.
+        
+        Math (Variable Delta Time):
+            Uses an accumulator pattern to ensure physics remains stable
+            regardless of frame rate fluctuations.
+
+        Args:
+
+        Returns:
+
+        """
         if not self.init_window():
             return False
             
         bg_renderer = BackgroundRenderer("assets/backdrop.png")
+        Settings.IS_PAUSED = False # Fix game restart: ensure not paused on start
         
         # --- SIMULATION INITIALIZATION ---
+        # PhysicsState manages the N x 10 matrix for all bodies.
         physics_state = PhysicsState(max_bodies=2000)
         metadata_manager = MetadataManager()
         
@@ -85,6 +128,7 @@ class Engine:
         missile_system.missile_lifetime = self.game_config["weapons"]["missile_lifetime"]
         missile_system.missile_damage = self.game_config["weapons"]["missile_damage"]
         missile_system.missile_radius = self.game_config["weapons"]["missile_radius"]
+        missile_system.max_missiles = self.game_config["weapons"].get("missile_max_active", 5)
         
         scanner_system = ScannerSystem(physics_state, metadata_manager, config=self.game_config)
         
@@ -106,6 +150,7 @@ class Engine:
         celestial_renderers = {} 
         
         for i, cb in enumerate(init_data["celestial_bodies"]):
+            # Display loading progress on screen
             progress = 0.3 + (i / len(init_data["celestial_bodies"])) * 0.4
             self.ui.draw_loading_screen(f"Mapping {cb['name']}...", progress, bg_renderer)
             self.impl.render(imgui.get_draw_data())
@@ -142,6 +187,7 @@ class Engine:
         AST_END = AST_START + len(asteroid_list)
 
         glEnable(GL_DEPTH_TEST)
+        # Enable Back-face culling for performance
         glEnable(GL_CULL_FACE)
         
         ship_renderer = MultiMeshRenderer(ship_stats["model_path"], initial_scale=ship_stats["model_scale"], is_ship=True) 
@@ -169,25 +215,30 @@ class Engine:
         headlights_on = False
         g_pressed_last = False
         last_fire_time = 0.0
+        should_restart = False
 
         while not glfw.window_should_close(self.window):
+            # 1. Time Management
             current_time = glfw.get_time()
             self.delta_time = current_time - last_time
             self.delta_time = min(self.delta_time, 0.1)
             last_time = current_time
             
-            # Ensure ship_world_pos is always available for rendering
+            # 2. Camera Update (Relative to ship)
             ship_world_pos = physics_state.matrix[spaceship_id, 0:3]
             ship_current_pos = physics_state.matrix[spaceship_id, 0:3]
             camera.update(ship_current_pos, self.delta_time)
             
-            # Camera and Front Vector calculation
+            # 3. View Direction Math
+            # Convert Spherical Coordinates (Yaw/Pitch) to Cartesian Front Vector
             cam_dist = camera.distance
             offset_x = cam_dist * math.cos(camera.pitch) * math.sin(camera.yaw)
             offset_y = cam_dist * math.sin(camera.pitch)
             offset_z = cam_dist * math.cos(camera.pitch) * math.cos(camera.yaw)
             camera_offset = glm.vec3(offset_x, offset_y, offset_z)
             
+            # front = (-sin yaw, -sin pitch, -cos yaw)
+            # right = cross(front, up_world)
             front = -np.array([offset_x, offset_y, offset_z], dtype=np.float32)
             front /= (np.linalg.norm(front) + 1e-6)
             
@@ -202,17 +253,19 @@ class Engine:
             accumulator += self.delta_time
 
             glfw.poll_events()
+            # Process ImGui events
             self.impl.process_inputs()
             imgui.new_frame()
             
-            should_restart = False
+            # should_restart is checked at the end of the loop
             if game_over:
                 glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_NORMAL)
                 restart, exit_btn = self.ui.draw_game_over()
                 if restart:
-                    logger.info("Restart requested by user.")
+                    logger.info("RESTART BUTTON CLICKED: Preparing system reset.")
                     should_restart = True
                 if exit_btn:
+                    logger.info("EXIT BUTTON CLICKED: Closing application.")
                     glfw.set_window_should_close(self.window, True)
             elif not game_started:
                 glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_NORMAL)
@@ -226,15 +279,19 @@ class Engine:
             elif Settings.IS_PAUSED:
                 res = self.ui.draw_pause_menu(self.game_config)
                 if res:
-                    resume, quit_game = res
+                    resume, restart_game, quit_game = res
                     if resume:
                         Settings.IS_PAUSED = False
                         glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_DISABLED)
                         cb_state['first_mouse'] = True
+                    if restart_game:
+                        logger.info("Restart requested from pause menu.")
+                        should_restart = True
                     if quit_game:
                         glfw.set_window_should_close(self.window, True)
             else:
-                # Headlights toggle
+                # Gameplay Input Handling
+                # Headlights toggle (G key)
                 g_key = glfw.get_key(self.window, glfw.KEY_G)
                 if g_key == glfw.PRESS and not g_pressed_last:
                     headlights_on = not headlights_on
@@ -242,8 +299,9 @@ class Engine:
                 g_pressed_last = (g_key == glfw.PRESS)
 
                 if glfw.get_mouse_button(self.window, glfw.MOUSE_BUTTON_LEFT) == glfw.PRESS:
+                    # Weapon Firing Logic
                     ship_pos = physics_state.matrix[spaceship_id, 0:3]
-                    # Target selection logic
+                    # Auto-Target selection: Find body closest to center crosshair
                     target_id = None
                     min_score = 1000.0 
                     active_mask = physics_state.get_active_mask()
@@ -268,12 +326,14 @@ class Engine:
                         last_fire_time = current_time
                 
                 if glfw.get_mouse_button(self.window, glfw.MOUSE_BUTTON_RIGHT) == glfw.PRESS:
-                    scanner_system.trigger(current_frame)
+                    scanner_system.trigger(current_time)
 
+                # 4. Physics and Logic Update (Fixed DT Accumulator)
                 while accumulator >= fixed_dt:
                     self.input_handler.process_ship_input(physics_state, spaceship_id, front, right, up, thrust_power=ship_stats["thrust_power"])
                     physics_state.apply_gravity(fixed_dt * Settings.SIMULATION_SPEED, G=gravity_constant)
                     
+                    # Collision Detection
                     cols = detect_collisions(physics_state.matrix, physics_state.get_active_mask(), physics_state.radii)
                     for a_id, b_id in cols:
                         if spaceship_id == a_id or spaceship_id == b_id:
@@ -289,6 +349,7 @@ class Engine:
                         elif b_id in missile_system.active_missiles: m_id, obj_id = b_id, a_id
                         
                         if m_id is not None:
+                            # Resolution: Missile Impact
                             obj_meta = metadata_manager.get_entity(obj_id)
                             missile_system.remove_missile(m_id)
                             if obj_meta:
@@ -301,15 +362,20 @@ class Engine:
                                     scale_m = (30.0 * radius) / exp_max
                                     effect_renderer.trigger_explosion(impact_pos_world, current_frame, self.game_config, scale_mult=scale_m)
                                     
-                                    physics_state.delete_body(obj_id)
-                                    metadata_manager.remove_entity(obj_id)
-                                    # Prevent ID reuse from respawning the planet
-                                    if obj_meta.name in celestial_renderers:
-                                        del celestial_renderers[obj_meta.name]
-                                    if obj_id in impact_registry:
-                                        del impact_registry[obj_id]
-                                    AudioManager.play("explosion", volume_mult=1.0)
-                                    logger.info(f"Entity {obj_id} ({obj_meta.name}) destroyed.")
+                                    if obj_id == spaceship_id:
+                                        game_over = True
+                                        logger.info("Game Over! Ship destroyed by missile impact.")
+                                        AudioManager.play("crash")
+                                    else:
+                                        physics_state.delete_body(obj_id)
+                                        metadata_manager.remove_entity(obj_id) # Fix ID reuse: clear metadata
+                                        # Prevent ID reuse from respawning the planet
+                                        if obj_meta.name in celestial_renderers:
+                                            del celestial_renderers[obj_meta.name]
+                                        if obj_id in impact_registry:
+                                            del impact_registry[obj_id]
+                                        AudioManager.play("explosion", volume_mult=1.0)
+                                        logger.info(f"Entity {obj_id} ({obj_meta.name}) destroyed.")
                                 else:
                                     # Not destroyed: 0.25x the planet's radius
                                     radius = physics_state.radii[obj_id]
@@ -330,7 +396,7 @@ class Engine:
                                     
                                     impacts = impact_registry.get(obj_id, [])
                                     impacts.append([impact_local, 1.5])
-                                    if len(impacts) > 8:
+                                    if len(impacts) > 32:
                                         impacts.pop(0)
                                     impact_registry[obj_id] = impacts
                                     
@@ -343,10 +409,10 @@ class Engine:
 
                     missile_system.update(current_time, fixed_dt)
                     effect_renderer.update_explosions(current_frame)
-                    scanner_system.update(current_frame, ship_world_pos)
+                    scanner_system.update(current_time, ship_world_pos)
                     accumulator -= fixed_dt
                 
-            # Rendering
+            # 5. Scene Rendering
             curr_w, curr_h = glfw.get_framebuffer_size(self.window)
             if curr_h > 0:
                 glViewport(0, 0, curr_w, curr_h)
@@ -362,7 +428,8 @@ class Engine:
             camera_world_pos = ship_world_pos + np.array([offset_x, offset_y, offset_z])
             dust_renderer.draw(view_matrix, projection_matrix, camera_world_pos)
 
-            # Lighting
+            # 6. Global Lighting Calculation
+            # Builds a list of light sources (Stars + Headlights) to pass to renderers
             lights = []
             for e_id, meta in metadata_manager.metadata_map.items():
                 if meta.luminosity > 0 and physics_state.get_active_mask()[e_id]:
@@ -399,7 +466,7 @@ class Engine:
             for _, renderer, _, _ in celestial_renderers.values():
                 if hasattr(renderer, 'set_lights'): renderer.set_lights(lights)
 
-            # Draw Celeastial Bodies
+            # 7. Draw Individual Components
             for name, data in celestial_renderers.items():
                 b_id, renderer, scale, is_glb = data
                 if b_id is not None and physics_state.get_active_mask()[b_id]:
@@ -444,11 +511,11 @@ class Engine:
 
             ship_renderer.draw([0,0,0], view_matrix, projection_matrix, yaw=camera.yaw, pitch=camera.pitch, camera_pos=cam_pos_f, config=self.game_config)
             if scanner_system.is_active:
-                wave_rad, _ = scanner_system.get_wave_params(current_frame)
+                wave_rad, _ = scanner_system.get_wave_params(current_time)
                 effect_renderer.draw_scanner([0,0,0], wave_rad, view_matrix, projection_matrix)
             effect_renderer.draw_explosions(view_matrix, projection_matrix, ship_world_pos, current_frame)
 
-            # UI Overlay
+            # 8. HUD and Overlay rendering
             self.ui.draw_hud(ship_world_pos, np.linalg.norm(physics_state.matrix[spaceship_id, 3:6]))
             ui_target_id = None
             ui_min_score = 10.0
